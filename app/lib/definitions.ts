@@ -18,6 +18,11 @@ export type Contact = {
 
 export type Pay = {
   id: string;
+  amount: number;
+  payor: string; //id of the contact who made the payment
+  payee: string; //id of the contact who received the payment
+  create_date: number; //UNIX timestamp the transaction was created 
+  finalize_date: number; //UNIX timestamp the transaction was finalized
   // TODO: build out what other fields this should have
 };
 
