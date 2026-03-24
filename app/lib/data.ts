@@ -18,10 +18,26 @@ export async function fetchActivity() {
 
 export async function fetchLatestPays() {
   try {
-    await new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
+    let latest_pays: Object[] = [];
+    await new Promise((resolve) => {
+      pays.forEach((payment) => {
+        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
+        latest_pays.push({
+          id: payment.id,
+          image_url: contact.image_url,
+          name: contact.name,
+          email: contact.email,
+          amount: payment.amount,
+          is_request: payment.is_request
+        })
+      });
+      setTimeout(resolve, getRandomMillis(3));
+    }
+      
+    );
 
     // TODO: return latest pays data joined with contacts
-    return [];
+    return latest_pays;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch the latest pays.');

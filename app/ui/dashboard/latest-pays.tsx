@@ -43,6 +43,11 @@ export default async function LatestPays() {
                     </p>
                   </div>
                 </div>
+                {/* <p
+                  className={`${lusitana.className} truncate text-sm font-medium md:text-base`}
+                >
+                  {pay.is_request ? 'Requested' : 'Paid'}
+                </p> */}
                 <p
                   className={`${lusitana.className} truncate text-sm font-medium md:text-base`}
                 >
