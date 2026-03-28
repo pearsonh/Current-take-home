@@ -51,7 +51,7 @@ const contacts = [
 const pays = [
   {
     id:"0a1c0244-00a0-41d1-a82e-75fe76ab388e",
-    amount: 1287,
+    amount: -1287,
     receiver: '3958dc9e-712f-4377-85e9-fec4b6a6442a',
     create_date: 1735771200,
     finalize_date: 1735800000,
@@ -135,7 +135,7 @@ const pays = [
   },
   {
     id:"0a3ae6a0-e3f8-415a-a8ab-2adb3311f3ef",
-    amount: 720,
+    amount: -720,
     receiver: 'd6e15727-9fe1-4961-8c5b-ea44a9bd81aa',
     create_date: 1751836800,
     finalize_date: 1751860000,
@@ -163,7 +163,7 @@ const pays = [
   },
   {
     id:"840670f8-24e9-462e-9ffc-0cb5e5ebe43e",
-    amount: 870,
+    amount: -870,
     receiver: '3958dc9e-742f-4377-85e9-fec4b6a6442a',
     create_date: 1757193600,
     finalize_date: 1757220000,
@@ -226,7 +226,7 @@ const pays = [
   },
   {
     id:"e2b2efb4-8aae-42b9-9394-7c79b06f1b0f",
-    amount: 150,
+    amount: -150,
     receiver: '3958dc9e-712f-4377-85e9-fec4b6a6442a',
     create_date: 1768166400,
     finalize_date: 1768190000,

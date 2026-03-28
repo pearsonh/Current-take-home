@@ -19,10 +19,10 @@ export type Contact = {
 export type Pay = {
   id: string;
   amount: number;
-  is_request: boolean; //id of the contact who made the payment
   receiver: string; //id of the contact who received the payment/request
   create_date: number; //UNIX timestamp the transaction was created 
   finalize_date: number; //UNIX timestamp the transaction was finalized
+  contact?: Contact;
   // TODO: build out what other fields this should have
 };
 

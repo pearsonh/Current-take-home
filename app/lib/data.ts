@@ -1,83 +1,85 @@
 import { useReducer } from "react";
 import {formatCurrency} from './utils';
-import {contacts, pays, activity} from "@/app/lib/placeholder-data";
+import {Contact, Activity, Pay, LatestPay, FormattedContactsTable} from '@/app/lib/definitions';
+import {contacts, pays} from "@/app/lib/placeholder-data";
 
 export async function fetchActivity() {
-  try {
-    // Artificially delay a response for demo purposes.
-    // Don't do this in production :)
-
-    await new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
-
-    let new_activity = [];
-    pays.forEach((pay) => {
-      let create_date: Date = getDateFromUnix(pay.create_date);
-      let create_date_key: string = create_date.toLocaleString('default', {month: 'short'}) + ', ' + create_date.getFullYear();
-      let existing_key = new_activity.findIndex((entry) => entry.month === create_date_key);
-      if (existing_key > 0) {
-        new_activity[existing_key].activity += pay.amount;
-      } else [
-        new_activity.push({
-          month: create_date_key,
-          activity: pay.amount
+    let activity_data: Activity[] = await new Promise((resolve, reject) => {
+      try {
+        let new_activity: Activity[] = [];
+        pays.forEach((pay) => {
+          let create_date: Date = getDateFromUnix(pay.create_date);
+          let create_date_key: string = create_date.toLocaleString('default', {month: 'short'}) + ', ' + create_date.getFullYear();
+          let existing_key = new_activity.findIndex((entry) => entry.month === create_date_key);
+          if (existing_key > 0) {
+            new_activity[existing_key].activity += pay.amount;
+          } else {
+            new_activity.push({
+              month: create_date_key,
+              activity: pay.amount
+            })
+          }
         })
-      ]
-    })
-    return new_activity.slice(-12);
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch activity data.');
-  }
+        resolve(new_activity);
+      } catch (error) {
+        console.error('Database Error:', error);
+        reject();
+        throw new Error('Failed to fetch activity data.');
+      }
+    });
+    return activity_data.slice(-12);
+    
+  
 }
 
 export async function fetchLatestPays() {
-  try {
-    let latest_pays: Object[] = [];
-    await new Promise((resolve) => {
-      pays.forEach((payment) => {
-        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
-        latest_pays.push({
-          id: payment.id,
-          image_url: contact.image_url,
-          name: contact.name,
-          email: contact.email,
-          amount: payment.amount
-        })
-      });
-      setTimeout(resolve, getRandomMillis(3));
+  return await new Promise((resolve, reject) => {
+    try {
+      let latest_pays: LatestPay[] = [];
+        pays.forEach((payment) => {
+          let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
+          latest_pays.push({
+            id: payment.id,
+            image_url: contact.image_url,
+            name: contact.name,
+            email: contact.email,
+            amount: formatCurrency(payment.amount)
+          });
+        });
+      resolve(latest_pays);
+    } catch (error) {
+      console.error('Database Error:', error);
+      reject();
+      throw new Error('Failed to fetch the latest pays.');
     }
-      
-    );
-    return latest_pays;
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch the latest pays.');
-  }
+  })
+  
 }
 
 export async function fetchCardData() {
   try {
-    const payCountPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
-    const contactCountPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
-    const payStatusPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
+    //should be calculated from CachedValues
+    // const payCountPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
+    // const contactCountPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
+    // const payStatusPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
 
-    const data = await Promise.all([
-      payCountPromise,
-      contactCountPromise,
-      payStatusPromise,
-    ]);
+    // const data = await Promise.all([
+    //   payCountPromise,
+    //   contactCountPromise,
+    //   payStatusPromise,
+    // ]);
 
-    const numberOfPays = pays.length;
-    const numberOfContacts = contacts.length;
-    const totalPaidPays = pays.filter((e) => e.finalize_date !== null).length;
-    const totalPendingPays = pays.filter((e) => e.finalize_date == null).length;
+    // const numberOfPays = pays.length;
+    // const numberOfContacts = contacts.length;
+    // const totalPaidPays = pays.filter((e) => e.finalize_date !== null).length;
+    // const totalPendingPays = pays.filter((e) => e.finalize_date == null).length;
 
-    return {
-      numberOfContacts,
-      numberOfPays,
-      totalPaidPays,
-      totalPendingPays,
-    };
+    // return {
+    //   numberOfContacts,
+    //   numberOfPays,
+    //   totalPaidPays,
+    //   totalPendingPays,
+    // };
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch card data.');
@@ -113,7 +115,6 @@ export async function fetchPaysPages(query: string) {
 
 export async function fetchPayById(id: string) {
   try {
-
     return pays.filter((e) => e['id'] == id);
   } catch (error) {
     console.error('Database Error:', error);
@@ -122,33 +123,43 @@ export async function fetchPayById(id: string) {
 }
 
 export async function fetchContacts() {
-  try {
-    //TODO
-  } catch (err) {
-    console.error('Database Error:', err);
-    throw new Error('Failed to fetch all contacts.');
-  }
+  let table_contacts: FormattedContactsTable[] = await new Promise((resolve, reject) => {
+    try {
+      let contacts_with_pay: FormattedContactsTable[] = [];
+      contacts.forEach((e) => {
+        let contact_payments = pays.filter((k) => e.id == k.receiver);
+        let total_paid: number = contact_payments.reduce((total, next) => {
+            return total + (next.finalize_date ? next.amount : 0)
+          }, 0);
+        let total_pending = contact_payments.reduce((total, next) => {
+            return total + (!next.finalize_date ? next.amount : 0)
+        }, 0);
+
+        contacts_with_pay.push({
+          id: e.id,
+          name: e.name,
+          email: e.email,
+          image_url: e.image_url,
+          total_pays: contact_payments.length,
+          total_paid: formatCurrency(total_paid),
+          total_pending: formatCurrency(total_pending)
+        });
+      });
+      resolve(contacts_with_pay);
+    } catch (err) {
+      console.error('Database Error:', err);
+      reject();
+      throw new Error('Failed to fetch all contacts.');
+    }
+  });
+  return table_contacts;
 }
 
 export async function fetchFilteredContacts(query: string) {
   try {
-    let filtered_contacts = contacts.filter((e) => e.name.match(query));
-    let table_contacts: Object[] = [];
-    filtered_contacts.forEach((e) => {
-      let new_contact: Object = e; 
-      let contact_payments = pays.filter((k) => e.id == k.receiver);
-      new_contact.total_pays = contact_payments.reduce((total, next) => {
-        return total + next.amount
-      }, 0);
-      new_contact.total_paid = contact_payments.reduce((total, next) => {
-        return total + (next.finalize_date ? next.amount : 0)
-      }, 0);
-      new_contact.total_pending = contact_payments.reduce((total, next) => {
-        return total + (!next.finalize_date ? next.amount : 0)
-      }, 0);
-      table_contacts.push(new_contact);
-    })
-    return table_contacts;
+    let unfiltered_contacts = await fetchContacts();
+    let filtered_contacts = unfiltered_contacts.filter((e) => e.name.match(query) || e.email.match(query));
+   
     return filtered_contacts;
   } catch (err) {
     console.error('Database Error:', err);
