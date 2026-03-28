@@ -1,7 +1,8 @@
 import { useReducer } from "react";
 import {formatCurrency} from './utils';
-import {Contact, Activity, Pay, LatestPay, FormattedContactsTable} from '@/app/lib/definitions';
+import {Contact, Activity, Pay, LatestPay, FormattedContactsTable, PaysTable} from '@/app/lib/definitions';
 import {contacts, pays} from "@/app/lib/placeholder-data";
+import { format } from "path";
 
 export async function fetchActivity() {
     let activity_data: Activity[] = await new Promise((resolve, reject) => {
@@ -36,16 +37,17 @@ export async function fetchLatestPays() {
   return await new Promise((resolve, reject) => {
     try {
       let latest_pays: LatestPay[] = [];
-        pays.forEach((payment) => {
-          let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
-          latest_pays.push({
-            id: payment.id,
-            image_url: contact.image_url,
-            name: contact.name,
-            email: contact.email,
-            amount: formatCurrency(payment.amount)
-          });
-        });
+      pays.forEach((payment) => {
+        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
+        let latest_pay: LatestPay = {
+          id: payment.id,
+          name: contact.name,
+          email: contact.email,
+          amount: formatCurrency(payment.amount),
+          image_url: contact.image_url
+        };
+        latest_pays.push(latest_pay);
+      });
       resolve(latest_pays);
     } catch (error) {
       console.error('Database Error:', error);
@@ -58,28 +60,27 @@ export async function fetchLatestPays() {
 
 export async function fetchCardData() {
   try {
-    //should be calculated from CachedValues
-    // const payCountPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
-    // const contactCountPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
-    // const payStatusPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
+    const payCountPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
+    const contactCountPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
+    const payStatusPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
 
-    // const data = await Promise.all([
-    //   payCountPromise,
-    //   contactCountPromise,
-    //   payStatusPromise,
-    // ]);
+    const data = await Promise.all([
+      payCountPromise,
+      contactCountPromise,
+      payStatusPromise,
+    ]);
 
-    // const numberOfPays = pays.length;
-    // const numberOfContacts = contacts.length;
-    // const totalPaidPays = pays.filter((e) => e.finalize_date !== null).length;
-    // const totalPendingPays = pays.filter((e) => e.finalize_date == null).length;
+    const numberOfPays = pays.length;
+    const numberOfContacts = contacts.length;
+    const totalPaidPays = pays.filter((e) => e.finalize_date !== null).length;
+    const totalPendingPays = pays.filter((e) => e.finalize_date == null).length;
 
-    // return {
-    //   numberOfContacts,
-    //   numberOfPays,
-    //   totalPaidPays,
-    //   totalPendingPays,
-    // };
+    return {
+      numberOfContacts,
+      numberOfPays,
+      totalPaidPays,
+      totalPendingPays,
+    };
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch card data.');
@@ -92,21 +93,37 @@ export async function fetchFilteredPays(
   currentPage: number,
 ) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-
-  try {
-
-    // TODO: filter the related pay joined data for the query string passed
-    return [];
+  return await new Promise((resolve, reject) => {
+    try {
+    let filtered_pays: PaysTable[] = [];
+      pays.forEach((payment) => {
+        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
+        let filtered_pay: PaysTable = {
+          id: payment.id,
+          contact_id: contact.id, 
+          date: getDateFromUnix(payment.create_date).toString(),
+          status: payment.finalize_date === null ? 'pending' : 'paid',
+          name: contact.name,
+          email: contact.email,
+          amount: payment.amount,
+          image_url: contact.image_url
+        };
+        filtered_pays.push(filtered_pay);
+      });
+      resolve(filtered_pays.slice(offset).slice(-ITEMS_PER_PAGE));
+    return ;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch pays.');
   }
+  } )
+  
 }
 
 export async function fetchPaysPages(query: string) {
   try {
     // TODO: filter the related pay joined data for the query string passed to find this value
-    return 0;
+    return (pays.length / ITEMS_PER_PAGE) + 1;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch total number of pays.');

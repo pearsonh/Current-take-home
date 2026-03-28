@@ -21,9 +21,7 @@ export type Pay = {
   amount: number;
   receiver: string; //id of the contact who received the payment/request
   create_date: number; //UNIX timestamp the transaction was created 
-  finalize_date: number; //UNIX timestamp the transaction was finalized
-  contact?: Contact;
-  // TODO: build out what other fields this should have
+  finalize_date: number | null; //UNIX timestamp the transaction was finalized - null means pending
 };
 
 export type Activity = {
