@@ -88,42 +88,48 @@ export async function fetchCardData() {
 }
 
 const ITEMS_PER_PAGE = 6;
+export async function fetchTotalFilteredPays(query: string): Promise<PaysTable[]> {
+  return await new Promise((resolve, reject) => {
+    try {
+      let filtered_pays: PaysTable[] = [];
+        pays.forEach((payment) => {
+          let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
+          if (contact.name.match(query) || contact.email.match(query)) {
+            let filtered_pay: PaysTable = {
+              id: payment.id,
+              contact_id: contact.id, 
+              date: getDateFromUnix(payment.create_date).toString(),
+              status: payment.finalize_date === null ? 'pending' : 'paid',
+              name: contact.name,
+              email: contact.email,
+              amount: payment.amount,
+              image_url: contact.image_url
+            };
+            filtered_pays.push(filtered_pay);
+          }
+        });
+        resolve(filtered_pays);
+    } catch (error) {
+      console.error('Database Error:', error);
+      reject();  
+      throw new Error('Failed to fetch pays.');
+    }
+  })
+}
+
 export async function fetchFilteredPays(
   query: string,
   currentPage: number,
 ) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-  return await new Promise((resolve, reject) => {
-    try {
-    let filtered_pays: PaysTable[] = [];
-      pays.forEach((payment) => {
-        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
-        let filtered_pay: PaysTable = {
-          id: payment.id,
-          contact_id: contact.id, 
-          date: getDateFromUnix(payment.create_date).toString(),
-          status: payment.finalize_date === null ? 'pending' : 'paid',
-          name: contact.name,
-          email: contact.email,
-          amount: payment.amount,
-          image_url: contact.image_url
-        };
-        filtered_pays.push(filtered_pay);
-      });
-      resolve(filtered_pays.slice(offset).slice(-ITEMS_PER_PAGE));
-    return ;
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch pays.');
-  }
-  } )
-  
+  let filtered_pays = await fetchTotalFilteredPays(query);
+  return filtered_pays.slice(offset, offset+ITEMS_PER_PAGE);  
 }
 
 export async function fetchPaysPages(query: string) {
   try {
-    // TODO: filter the related pay joined data for the query string passed to find this value
-    return (pays.length / ITEMS_PER_PAGE) + 1;
+    let filtered_pays = await fetchTotalFilteredPays(query);
+    return (filtered_pays.length / ITEMS_PER_PAGE) + 1;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch total number of pays.');
@@ -189,5 +195,5 @@ function getRandomMillis(max) {
 }
 
 function getDateFromUnix(unix_time: number): Date {
-  return new Date(unix_time * 1000);
+  return new Date(unix_time);
 }

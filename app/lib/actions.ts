@@ -1,6 +1,7 @@
 'use server'
 
 import { z } from 'zod'
+import {pays} from "@/app/lib/placeholder-data";
 
 const FormSchema = z.object({
     id: z.string(),
@@ -15,8 +16,14 @@ export async function createPay(formData: FormData) {
     const { contactId, amount, status } = CreatePay.parse({
         contactId: formData.get('contactId'),
         amount: formData.get('amount'),
-        status: formData.get('status'),
+        status: formData.get('status') ?? 'pending',
     });
-    const amountInCents = amount * 100;
-    const date = new Date().toISOString().split('T')[0]
+    const create_date = new Date();
+    pays.push({
+        id: crypto.randomUUID.toString(),
+        receiver: contactId,
+        amount: amount, 
+        create_date: create_date.getTime(),
+        finalize_date: status === 'pending' ? null : create_date.getTime()
+    })
 }
