@@ -7,6 +7,7 @@ export default async function Page(
         query?: string;
     }
 }) {
+    searchParams = await searchParams;
     const query = searchParams?.query || '';
 
     return (
