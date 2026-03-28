@@ -2,6 +2,8 @@
 
 import { ContactField, PayForm } from '@/app/lib/definitions';
 import {
+  ArrowUpTrayIcon,
+  ArrowDownTrayIcon,
   CheckIcon,
   ClockIcon,
   CurrencyDollarIcon,
@@ -9,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { Button } from '@/app/ui/button';
+import { updatePay } from "@/app/lib/actions";
 
 export default function EditPayForm({
   pay,
@@ -18,8 +21,9 @@ export default function EditPayForm({
   contacts: ContactField[];
 }) {
   return (
-    <form>
+    <form action={updatePay}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
+        <input hidden id='id' name='id' value= {pay.id} readOnly/>
         {/* Contact Name */}
         <div className="mb-4">
           <label htmlFor="contact" className="mb-2 block text-sm font-medium">
@@ -65,6 +69,49 @@ export default function EditPayForm({
             </div>
           </div>
         </div>
+
+        {/* Pay Status */}
+        <fieldset>
+          <legend className="mb-2 block text-sm font-medium">
+            Choose pay type
+          </legend>
+          <div className="rounded-md border border-gray-200 bg-white px-[14px] py-3">
+            <div className="flex gap-4">
+              <div className="flex items-center">
+                <input
+                  id="request"
+                  name="is_request"
+                  type="radio"
+                  value="request"
+                  className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  defaultChecked={pay.is_request === 'request'}
+                />
+                <label
+                  htmlFor="request"
+                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600"
+                >
+                  Request <ArrowDownTrayIcon className="h-4 w-4" />
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="payment"
+                  name="is_request"
+                  type="radio"
+                  value="payment"
+                  className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  defaultChecked={pay.is_request === 'payment'}
+                />
+                <label
+                  htmlFor="payment"
+                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-xs font-medium text-white"
+                >
+                  Pay <ArrowUpTrayIcon className="h-4 w-4" />
+                </label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
 
         {/* Pay Status */}
         <fieldset>

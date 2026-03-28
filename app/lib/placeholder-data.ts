@@ -48,6 +48,7 @@ const contacts = [
 
 // TODO: Generate a years worth of random pays using the contacts above
 // I laid out the initial fields and set them with repeated, consistent values, which allowed easier and more accurate LLM parsing, which I then used to randomize values (see gptlog.txt)
+// edits were made to make unix codes to miliseconds, as well as create a more effective data model
 const pays = [
   {
     id:"0a1c0244-00a0-41d1-a82e-75fe76ab388e",

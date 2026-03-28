@@ -82,6 +82,6 @@ export type PayForm = {
   id: string;
   contact_id: string;
   amount: number;
-  // TODO: more here
+  is_request: 'request' | 'payment';
   status: 'pending' | 'paid';
 };

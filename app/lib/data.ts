@@ -1,6 +1,6 @@
 import { useReducer } from "react";
 import {formatCurrency} from './utils';
-import {Contact, Activity, Pay, LatestPay, FormattedContactsTable, PaysTable} from '@/app/lib/definitions';
+import {Contact, Activity, Pay, LatestPay, FormattedContactsTable, PaysTable, PayForm} from '@/app/lib/definitions';
 import {contacts, pays} from "@/app/lib/placeholder-data";
 import { format } from "path";
 
@@ -8,7 +8,8 @@ export async function fetchActivity() {
     let activity_data: Activity[] = await new Promise((resolve, reject) => {
       try {
         let new_activity: Activity[] = [];
-        pays.forEach((pay) => {
+        let sorted_pays = getDateSortedPaysAsc();
+        sorted_pays.forEach((pay) => {
           let create_date: Date = getDateFromUnix(pay.create_date);
           let create_date_key: string = create_date.toLocaleString('default', {month: 'short'}) + ', ' + create_date.getFullYear();
           let existing_key = new_activity.findIndex((entry) => entry.month === create_date_key);
@@ -33,11 +34,14 @@ export async function fetchActivity() {
   
 }
 
+const MAX_LATEST_PAYS = 8;
+
 export async function fetchLatestPays() {
   return await new Promise((resolve, reject) => {
     try {
       let latest_pays: LatestPay[] = [];
-      pays.forEach((payment) => {
+      let sorted_pays = getDateSortedPaysDesc();
+      sorted_pays.forEach((payment) => {
         let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
         let latest_pay: LatestPay = {
           id: payment.id,
@@ -48,7 +52,7 @@ export async function fetchLatestPays() {
         };
         latest_pays.push(latest_pay);
       });
-      resolve(latest_pays);
+      resolve(latest_pays.splice(0, MAX_LATEST_PAYS));
     } catch (error) {
       console.error('Database Error:', error);
       reject();
@@ -87,28 +91,29 @@ export async function fetchCardData() {
   }
 }
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 30;
 export async function fetchTotalFilteredPays(query: string): Promise<PaysTable[]> {
   return await new Promise((resolve, reject) => {
     try {
       let filtered_pays: PaysTable[] = [];
-        pays.forEach((payment) => {
-          let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
-          if (contact.name.match(query) || contact.email.match(query)) {
-            let filtered_pay: PaysTable = {
-              id: payment.id,
-              contact_id: contact.id, 
-              date: getDateFromUnix(payment.create_date).toString(),
-              status: payment.finalize_date === null ? 'pending' : 'paid',
-              name: contact.name,
-              email: contact.email,
-              amount: payment.amount,
-              image_url: contact.image_url
-            };
-            filtered_pays.push(filtered_pay);
-          }
-        });
-        resolve(filtered_pays);
+      let sorted_pays = getDateSortedPaysDesc();
+      sorted_pays.forEach((payment) => {
+        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
+        if (contact.name.match(query) || contact.email.match(query)) {
+          let filtered_pay: PaysTable = {
+            id: payment.id,
+            contact_id: contact.id, 
+            date: getDateFromUnix(payment.create_date).toString(),
+            status: payment.finalize_date === null ? 'pending' : 'paid',
+            name: contact.name,
+            email: contact.email,
+            amount: payment.amount,
+            image_url: contact.image_url
+          };
+          filtered_pays.push(filtered_pay);
+        }
+      });
+      resolve(filtered_pays);
     } catch (error) {
       console.error('Database Error:', error);
       reject();  
@@ -136,13 +141,23 @@ export async function fetchPaysPages(query: string) {
   }
 }
 
-export async function fetchPayById(id: string) {
-  try {
-    return pays.filter((e) => e['id'] == id);
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch pay.');
-  }
+export async function fetchPayById(id: string): Promise<PayForm> {
+  return await new Promise((resolve, reject) => {
+    try {
+      let specific_pay = pays.filter((e) => e['id'] == id)[0];
+      resolve({
+        id: specific_pay.id,
+        contact_id: specific_pay.receiver,
+        amount: specific_pay.amount,
+        is_request: specific_pay.amount < 0 ? 'request' : 'payment',
+        status: specific_pay.finalize_date === null ? "pending" : "paid"
+      });
+    } catch (error) {
+      console.error('Database Error:', error);
+      reject();
+      throw new Error('Failed to fetch pay.');
+    }
+  })
 }
 
 export async function fetchContacts() {
@@ -190,10 +205,26 @@ export async function fetchFilteredContacts(query: string) {
   }
 }
 
-function getRandomMillis(max) {
+function getRandomMillis(max: number) {
   return Math.random() * max * 1000;
 }
 
 function getDateFromUnix(unix_time: number): Date {
   return new Date(unix_time);
+}
+
+function getDateSortedPaysDesc(): Pay[] {
+  let sorted_pays = pays;
+  sorted_pays.sort((a, b) => {
+    return b.create_date - a.create_date
+  });
+  return sorted_pays;
+}
+
+function getDateSortedPaysAsc(): Pay[] {
+  let sorted_pays = pays;
+  sorted_pays.sort((a, b) => {
+    return a.create_date - b.create_date
+  });
+  return sorted_pays;
 }
