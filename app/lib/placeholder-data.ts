@@ -262,20 +262,6 @@ const pays = [
 ];
 
 // TODO: After you generate pays, calculate the activity for the respective months
-const activity = [
-  { month: 'Jan', activity: 2000 },
-  // { month: 'Feb', activity: 1800 },
-  // { month: 'Mar', activity: 2200 },
-  // { month: 'Apr', activity: 2500 },
-  // { month: 'May', activity: 2300 },
-  // { month: 'Jun', activity: 3200 },
-  // { month: 'Jul', activity: 3500 },
-  // { month: 'Aug', activity: 3700 },
-  // { month: 'Sep', activity: 2500 },
-  // { month: 'Oct', activity: 2800 },
-  // { month: 'Nov', activity: 3000 },
-  // { month: 'Dec', activity: 4800 },
-  {month: 'Jan', activity: 2000 }
-];
+const activity = [];
 
 export { user, contacts, pays, activity };
