@@ -13,7 +13,7 @@ export default async function ActivityChart() {
   const activity = await fetchActivity();
 
   const chartHeight = 350;
-  const { yAxisLabels, topLabel } = generateYAxis(activity);
+  const { yAxisLabels, topLabel } = await generateYAxis(activity);
 
   if (!activity || activity.length === 0) {
     return <p className="mt-4 text-gray-400">No data available.</p>;
