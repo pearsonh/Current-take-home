@@ -19,7 +19,7 @@ export type Contact = {
 export type Pay = {
   id: string;
   amount: number;
-  receiver: string; //id of the contact who received the payment/request
+  contactId: string; //id of the contact who received the payment/request
   create_date: number; //UNIX timestamp the transaction was created 
   finalize_date: number | null; //UNIX timestamp the transaction was finalized - null means pending
 };
@@ -35,6 +35,7 @@ export type LatestPay = {
   image_url: string;
   email: string;
   amount: string;
+  finalize_date: string;
 };
 
 // The database returns a number for amount, but we later format it to a string with the formatCurrency function
@@ -48,8 +49,9 @@ export type PaysTable = {
   name: string;
   email: string;
   image_url: string;
+  create_date: string;
   date: string;
-  amount: number;
+  amount: string;
   status: 'pending' | 'paid';
 };
 

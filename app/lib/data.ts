@@ -36,19 +36,20 @@ export async function fetchActivity() {
 
 const MAX_LATEST_PAYS = 8;
 
-export async function fetchLatestPays() {
+export async function fetchLatestPays(): Promise<LatestPay[]> {
   return await new Promise((resolve, reject) => {
     try {
       let latest_pays: LatestPay[] = [];
-      let sorted_pays = getDateSortedPaysDesc();
+      let sorted_pays = getDateSortedPaysDesc().splice(0,  MAX_LATEST_PAYS);
       sorted_pays.forEach((payment) => {
-        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
+        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.contactId)];
         let latest_pay: LatestPay = {
           id: payment.id,
           name: contact.name,
           email: contact.email,
           amount: formatCurrency(payment.amount),
-          image_url: contact.image_url
+          image_url: contact.image_url,
+          finalize_date: payment.finalize_date ? new Date(payment.finalize_date).toLocaleString() : 'Pending',
         };
         latest_pays.push(latest_pay);
       });
@@ -98,16 +99,17 @@ export async function fetchTotalFilteredPays(query: string): Promise<PaysTable[]
       let filtered_pays: PaysTable[] = [];
       let sorted_pays = getDateSortedPaysDesc();
       sorted_pays.forEach((payment) => {
-        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.receiver)];
+        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.contactId)];
         if (contact.name.match(query) || contact.email.match(query)) {
           let filtered_pay: PaysTable = {
             id: payment.id,
             contact_id: contact.id, 
-            date: getDateFromUnix(payment.create_date).toString(),
+            create_date: getDateFromUnix(payment.create_date).toLocaleString(),
+            date: payment.finalize_date ? getDateFromUnix(payment.finalize_date).toLocaleString() : 'Pending',
             status: payment.finalize_date === null ? 'pending' : 'paid',
             name: contact.name,
             email: contact.email,
-            amount: payment.amount,
+            amount: formatCurrency(payment.amount),
             image_url: contact.image_url
           };
           filtered_pays.push(filtered_pay);
@@ -147,7 +149,7 @@ export async function fetchPayById(id: string): Promise<PayForm> {
       let specific_pay = pays.filter((e) => e['id'] == id)[0];
       resolve({
         id: specific_pay.id,
-        contact_id: specific_pay.receiver,
+        contact_id: specific_pay.contactId,
         amount: Math.abs(specific_pay.amount),
         is_request: specific_pay.amount < 0 ? 'payment' : 'request',
         status: specific_pay.finalize_date === null ? "pending" : "paid"
@@ -165,7 +167,7 @@ export async function fetchContacts() {
     try {
       let contacts_with_pay: FormattedContactsTable[] = [];
       contacts.forEach((e) => {
-        let contact_payments = pays.filter((k) => e.id == k.receiver);
+        let contact_payments = pays.filter((k) => e.id == k.contactId);
         let total_paid: number = contact_payments.reduce((total, next) => {
             return total + (next.finalize_date ? next.amount : 0)
           }, 0);
@@ -213,16 +215,18 @@ function getDateFromUnix(unix_time: number): Date {
   return new Date(unix_time);
 }
 
+//Returns a *copy* of the pays array, sorted by create_date descending
 function getDateSortedPaysDesc(): Pay[] {
-  let sorted_pays = pays;
+  let sorted_pays = [...pays];
   sorted_pays.sort((a, b) => {
     return b.create_date - a.create_date
   });
   return sorted_pays;
 }
 
+//Returns a *copy* of the pays array, sorted by create_date ascending
 function getDateSortedPaysAsc(): Pay[] {
-  let sorted_pays = pays;
+  let sorted_pays = [...pays];
   sorted_pays.sort((a, b) => {
     return a.create_date - b.create_date
   });

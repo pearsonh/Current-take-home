@@ -55,6 +55,15 @@ export default async function PaysTable({
                 <th scope="col" className="px-3 py-5 font-medium">
                   Email
                 </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Amount
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Date Created
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Date Paid
+                </th>
                 <th scope="col" className="relative py-3 pl-6 pr-3">
                   <span className="sr-only">Edit</span>
                 </th>
@@ -80,6 +89,15 @@ export default async function PaysTable({
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {pay.email}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {pay.amount}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {pay.create_date}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {pay.date}
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">

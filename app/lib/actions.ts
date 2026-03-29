@@ -22,7 +22,7 @@ export async function createPay(formData: FormData) {
     const create_date = new Date();
     pays.push({
         id: crypto.randomUUID(),
-        receiver: contactId,
+        contactId: contactId,
         amount: status === 'paid' ? -1 * amount : amount, 
         create_date: create_date.getTime(),
         finalize_date: status === 'pending' ? null : create_date.getTime()
@@ -43,7 +43,7 @@ export async function updatePay(formData: FormData) {
     if (pays[index]) {
         let new_element = {
             ...pays[index],
-            receiver: contactId,
+            contactId: contactId,
             amount: is_request == 'payment' ? amount * -1 : amount,
             finalize_date: status === 'pending' ? null : current_date.getTime()
         }

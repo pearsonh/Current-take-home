@@ -5,7 +5,7 @@ import { lusitana } from '@/app/ui/fonts';
 import { LatestPay } from '@/app/lib/definitions';
 import {fetchLatestPays} from "@/app/lib/data";
 export default async function LatestPays() {
-    const latestPays = await fetchLatestPays();
+    const latestPays: LatestPay[] = await fetchLatestPays();
 
   return (
     <div className="flex w-full flex-col md:col-span-4">
@@ -41,13 +41,19 @@ export default async function LatestPays() {
                     <p className="hidden text-sm text-gray-500 sm:block">
                       {pay.email}
                     </p>
+                  
                   </div>
+                  
                 </div>
-                <p
-                  className={`${lusitana.className} truncate text-sm font-medium md:text-base`}
-                >
-                  {pay.amount}
-                </p>
+                <div className="min-w-0">
+                  <p className={`${lusitana.className} truncate text-sm font-medium md:text-base text-end`}
+                  >
+                    {pay.amount}
+                  </p>
+                  <p className="truncate text-sm text-gray-500 md:text-base">
+                    {pay.finalize_date}
+                  </p>
+                </div>
               </div>
             );
           })}
