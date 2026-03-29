@@ -148,8 +148,8 @@ export async function fetchPayById(id: string): Promise<PayForm> {
       resolve({
         id: specific_pay.id,
         contact_id: specific_pay.receiver,
-        amount: specific_pay.amount,
-        is_request: specific_pay.amount < 0 ? 'request' : 'payment',
+        amount: Math.abs(specific_pay.amount),
+        is_request: specific_pay.amount < 0 ? 'payment' : 'request',
         status: specific_pay.finalize_date === null ? "pending" : "paid"
       });
     } catch (error) {

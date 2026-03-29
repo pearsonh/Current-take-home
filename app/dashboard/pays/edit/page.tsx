@@ -1,6 +1,7 @@
 import Form from '@/app/ui/pays/edit-form';
 import Breadcrumbs from '@/app/ui/pays/breadcrumbs';
 import { fetchContacts, fetchPayById } from '@/app/lib/data';
+import {pays} from '@/app/lib/placeholder-data';
 
 export default async function Page(
     { searchParams }: { searchParams?: {

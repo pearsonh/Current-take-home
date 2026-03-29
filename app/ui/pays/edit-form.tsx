@@ -1,5 +1,3 @@
-'use client';
-
 import { ContactField, PayForm } from '@/app/lib/definitions';
 import {
   ArrowUpTrayIcon,
@@ -61,6 +59,7 @@ export default function EditPayForm({
                 name="amount"
                 type="number"
                 step="0.01"
+                min='0.01'
                 defaultValue={pay.amount}
                 placeholder="Enter USD amount"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
