@@ -1,14 +1,30 @@
 import { useReducer } from "react";
 import {formatCurrency} from './utils';
 import {Contact, Activity, Pay, LatestPay, FormattedContactsTable, PaysTable, PayForm} from '@/app/lib/definitions';
-import {contacts, pays} from "@/app/lib/placeholder-data";
+import {contacts, pays, user} from "@/app/lib/placeholder-data";
 import { format } from "path";
 
-export async function fetchActivity() {
-    let activity_data: Activity[] = await new Promise((resolve, reject) => {
+
+export async function fetchSignedInUser(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      //In a real system, this code would pull a user from session and check authentication, and with more time I would simulate more users. 
+      // This is just to demonstrate that pays are per-user - the place-holder data can be modified to show this
+      resolve(user[0].id);
+    } catch (error) {
+      console.error('Database Error:', error);
+      reject();
+      throw new Error('Failed to fetch activity data.');
+    }
+  });
+}
+const MAX_ACTIVITY = 12
+export async function fetchActivity(user: string): Promise<Activity[]> {
+    let active_pays = await getActiveUserPays(user);
+    return await new Promise((resolve, reject) => {
       try {
         let new_activity: Activity[] = [];
-        let sorted_pays = getDateSortedPaysAsc();
+        let sorted_pays = getDateSortedPaysAsc(active_pays);
         sorted_pays.forEach((pay) => {
           let create_date: Date = getDateFromUnix(pay.create_date);
           let create_date_key: string = create_date.toLocaleString('default', {month: 'short'}) + ', ' + create_date.getFullYear();
@@ -22,27 +38,27 @@ export async function fetchActivity() {
             })
           }
         })
-        resolve(new_activity);
+        resolve(new_activity.slice(MAX_ACTIVITY * -1));
       } catch (error) {
         console.error('Database Error:', error);
         reject();
         throw new Error('Failed to fetch activity data.');
       }
     });
-    return activity_data.slice(-12);
     
   
 }
 
-const MAX_LATEST_PAYS = 8;
+const MAX_LATEST_PAYS = 6;
 
-export async function fetchLatestPays(): Promise<LatestPay[]> {
+export async function fetchLatestPays(user:string ): Promise<LatestPay[]> {
+  let active_pays = getActiveUserPays(user)
   return await new Promise((resolve, reject) => {
     try {
       let latest_pays: LatestPay[] = [];
-      let sorted_pays = getDateSortedPaysDesc().splice(0,  MAX_LATEST_PAYS);
+      let sorted_pays = getDateSortedPaysDesc(pays).splice(0,  MAX_LATEST_PAYS);
       sorted_pays.forEach((payment) => {
-        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.contactId)];
+        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.contact_id)];
         let latest_pay: LatestPay = {
           id: payment.id,
           name: contact.name,
@@ -63,22 +79,14 @@ export async function fetchLatestPays(): Promise<LatestPay[]> {
   
 }
 
-export async function fetchCardData() {
+export async function fetchCardData(user_id: string) {
   try {
-    const payCountPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
-    const contactCountPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
-    const payStatusPromise = new Promise((resolve) => setTimeout(resolve, getRandomMillis(3)));
-
-    const data = await Promise.all([
-      payCountPromise,
-      contactCountPromise,
-      payStatusPromise,
-    ]);
-
-    const numberOfPays = pays.length;
-    const numberOfContacts = contacts.length;
-    const totalPaidPays = pays.filter((e) => e.finalize_date !== null).length;
-    const totalPendingPays = pays.filter((e) => e.finalize_date == null).length;
+    let active_pays = getActiveUserPays(user_id);
+    let user_contacts = await fetchContacts(user_id);
+    const numberOfPays = active_pays.length;
+    const numberOfContacts = user_contacts.length;
+    const totalPaidPays = active_pays.filter((e) => e.finalize_date !== null).length;
+    const totalPendingPays = active_pays.filter((e) => e.finalize_date == null).length;
 
     return {
       numberOfContacts,
@@ -93,13 +101,13 @@ export async function fetchCardData() {
 }
 
 const ITEMS_PER_PAGE = 30;
-export async function fetchTotalFilteredPays(query: string): Promise<PaysTable[]> {
+export async function fetchTotalFilteredPays(user:string, query: string): Promise<PaysTable[]> {
   return await new Promise((resolve, reject) => {
     try {
       let filtered_pays: PaysTable[] = [];
-      let sorted_pays = getDateSortedPaysDesc();
+      let sorted_pays = getDateSortedPaysDesc(getActiveUserPays(user));
       sorted_pays.forEach((payment) => {
-        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.contactId)];
+        let contact = contacts[contacts.findIndex((e) => e['id'] == payment.contact_id)];
         if (contact.name.match(query) || contact.email.match(query)) {
           let filtered_pay: PaysTable = {
             id: payment.id,
@@ -125,17 +133,18 @@ export async function fetchTotalFilteredPays(query: string): Promise<PaysTable[]
 }
 
 export async function fetchFilteredPays(
+  user: string,
   query: string,
   currentPage: number,
 ) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-  let filtered_pays = await fetchTotalFilteredPays(query);
+  let filtered_pays = await fetchTotalFilteredPays(user, query);
   return filtered_pays.slice(offset, offset+ITEMS_PER_PAGE);  
 }
 
-export async function fetchPaysPages(query: string) {
+export async function fetchPaysPages(user: string, query: string) {
   try {
-    let filtered_pays = await fetchTotalFilteredPays(query);
+    let filtered_pays = await fetchTotalFilteredPays(user, query);
     return (filtered_pays.length / ITEMS_PER_PAGE) + 1;
   } catch (error) {
     console.error('Database Error:', error);
@@ -149,7 +158,8 @@ export async function fetchPayById(id: string): Promise<PayForm> {
       let specific_pay = pays.filter((e) => e['id'] == id)[0];
       resolve({
         id: specific_pay.id,
-        contact_id: specific_pay.contactId,
+        pay_id: specific_pay.pay_id,
+        contact_id: specific_pay.contact_id,
         amount: Math.abs(specific_pay.amount),
         is_request: specific_pay.amount < 0 ? 'payment' : 'request',
         status: specific_pay.finalize_date === null ? "pending" : "paid"
@@ -162,12 +172,13 @@ export async function fetchPayById(id: string): Promise<PayForm> {
   })
 }
 
-export async function fetchContacts() {
+export async function fetchContacts(user: string) {
+  let active_contacts = contacts.filter(contact => contact.user_id === user);
   let table_contacts: FormattedContactsTable[] = await new Promise((resolve, reject) => {
     try {
       let contacts_with_pay: FormattedContactsTable[] = [];
-      contacts.forEach((e) => {
-        let contact_payments = pays.filter((k) => e.id == k.contactId);
+      active_contacts.forEach((e) => {
+        let contact_payments = pays.filter((k) => e.id == k.contact_id);
         let total_paid: number = contact_payments.reduce((total, next) => {
             return total + (next.finalize_date ? next.amount : 0)
           }, 0);
@@ -195,9 +206,9 @@ export async function fetchContacts() {
   return table_contacts;
 }
 
-export async function fetchFilteredContacts(query: string) {
+export async function fetchFilteredContacts(user: string, query: string) {
   try {
-    let unfiltered_contacts = await fetchContacts();
+    let unfiltered_contacts = await fetchContacts(user);
     let filtered_contacts = unfiltered_contacts.filter((e) => e.name.match(query) || e.email.match(query));
    
     return filtered_contacts;
@@ -216,7 +227,7 @@ function getDateFromUnix(unix_time: number): Date {
 }
 
 //Returns a *copy* of the pays array, sorted by create_date descending
-function getDateSortedPaysDesc(): Pay[] {
+function getDateSortedPaysDesc(pays: Pay[]): Pay[] {
   let sorted_pays = [...pays];
   sorted_pays.sort((a, b) => {
     return b.create_date - a.create_date
@@ -225,10 +236,17 @@ function getDateSortedPaysDesc(): Pay[] {
 }
 
 //Returns a *copy* of the pays array, sorted by create_date ascending
-function getDateSortedPaysAsc(): Pay[] {
+function getDateSortedPaysAsc(pays: Pay[]): Pay[] {
   let sorted_pays = [...pays];
   sorted_pays.sort((a, b) => {
     return a.create_date - b.create_date
   });
   return sorted_pays;
+}
+
+
+function getActiveUserPays(user_id: string): Pay[] {
+  return pays.filter((pay: Pay) => {
+    return pay.delete_date == null && pay.user_id === user_id;
+  })
 }

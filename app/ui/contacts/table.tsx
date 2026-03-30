@@ -8,11 +8,13 @@ import {
 import {fetchFilteredContacts, fetchFilteredPays} from "@/app/lib/data";
 
 export default async function ContactsTable({
+  user,
   query,
 }: {
+  user: string,
   query: string;
 }) {
-  const contacts = await fetchFilteredContacts(query);
+  const contacts = await fetchFilteredContacts(user, query);
 
   return (
     <div className="w-full">

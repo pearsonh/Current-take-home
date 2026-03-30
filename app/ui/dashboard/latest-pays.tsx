@@ -4,8 +4,12 @@ import Image from 'next/image';
 import { lusitana } from '@/app/ui/fonts';
 import { LatestPay } from '@/app/lib/definitions';
 import {fetchLatestPays} from "@/app/lib/data";
-export default async function LatestPays() {
-    const latestPays: LatestPay[] = await fetchLatestPays();
+export default async function LatestPays({
+  user,
+}: {
+  user: string;
+}) {
+    const latestPays: LatestPay[] = await fetchLatestPays(user);
 
   return (
     <div className="flex w-full flex-col md:col-span-4">

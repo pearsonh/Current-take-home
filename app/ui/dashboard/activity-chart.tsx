@@ -9,8 +9,12 @@ import {fetchActivity} from "@/app/lib/data";
 // https://www.chartjs.org/
 // https://airbnb.io/visx/
 
-export default async function ActivityChart() {
-  const activity = await fetchActivity();
+export default async function ActivityChart({
+  user,
+}: {
+  user: string;
+}) {
+  const activity = await fetchActivity(user);
 
   const chartHeight = 350;
   const { yAxisLabels, topLabel } = await generateYAxis(activity);

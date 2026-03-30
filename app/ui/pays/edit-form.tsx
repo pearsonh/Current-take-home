@@ -12,16 +12,20 @@ import { Button } from '@/app/ui/button';
 import { updatePay } from "@/app/lib/actions";
 
 export default function EditPayForm({
+  user,
   pay,
   contacts,
 }: {
+  user: string,
   pay: PayForm;
   contacts: ContactField[];
 }) {
   return (
     <form action={updatePay}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
+        <input hidden id='user' name='user' value= {user} readOnly/>
         <input hidden id='id' name='id' value= {pay.id} readOnly/>
+        <input hidden id='pay_id' name='pay_id' value= {pay.pay_id} readOnly/>
         {/* Contact Name */}
         <div className="mb-4">
           <label htmlFor="contact" className="mb-2 block text-sm font-medium">

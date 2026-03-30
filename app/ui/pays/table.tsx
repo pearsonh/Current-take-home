@@ -4,13 +4,15 @@ import { fetchFilteredPays } from '@/app/lib/data';
 
 //
 export default async function PaysTable({
+  user,
   query,
   currentPage,
 }: {
+  user: string,
   query: string;
   currentPage: number;
 }) {
-  const pays = await fetchFilteredPays(query, currentPage);
+  const pays = await fetchFilteredPays(user, query, currentPage);
 
   return (
     <div className="mt-6 flow-root">

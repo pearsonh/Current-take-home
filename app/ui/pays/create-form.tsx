@@ -10,10 +10,17 @@ import { Button } from '@/app/ui/button';
 import { createPay } from "@/app/lib/actions";
 
 // TODO: update form per your `pay` model
-export default function Form({ contacts }: { contacts: ContactField[] }) {
+export default function Form({ 
+  user, 
+  contacts 
+}: { 
+  contacts: ContactField[] 
+  user: string
+}) {
   return (
     <form action={createPay}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
+        <input hidden id='user' name='user' value= {user} readOnly/>
         {/* Contact Name */}
         <div className="mb-4">
           <label htmlFor="contact" className="mb-2 block text-sm font-medium">

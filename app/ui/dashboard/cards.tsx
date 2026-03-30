@@ -14,13 +14,17 @@ const iconMap = {
   pays: ArrowsRightLeftIcon,
 };
 
-export default async function CardWrapper() {
+export default async function CardWrapper({
+  user,
+}: {
+  user: string;
+}){
     const {
         numberOfPays,
         numberOfContacts,
         totalPaidPays,
         totalPendingPays,
-    } = await fetchCardData();
+    } = await fetchCardData(user);
 
   return (
     <>

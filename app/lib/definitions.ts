@@ -14,14 +14,19 @@ export type Contact = {
   name: string;
   email: string;
   image_url: string;
+  user_id: string;
 };
 
 export type Pay = {
   id: string;
-  amount: number;
-  contactId: string; //id of the contact who received the payment/request
+  pay_id: number; //id corresponding to an individual payment - autoincrementing
+  amount: number; //negative if a payment, positive if a request. Better for wallets math/data reporting
+  contact_id: string; //id of the contact who received the payment/request
+  user_id: string; //id of the user to whom the transaction pertains
   create_date: number; //UNIX timestamp the transaction was created 
-  finalize_date: number | null; //UNIX timestamp the transaction was finalized - null means pending
+  finalize_date: number | null; //UNIX timestamp the transaction was finalized - null is translated to pending on the UI
+  update_date: number; //UNIX timestamp of when the last update was created
+  delete_date: number | null; //UNIX timestamp of the date when the record was deleted or made obsolete through update. 
 };
 
 export type Activity = {
@@ -82,6 +87,7 @@ export type ContactField = {
 
 export type PayForm = {
   id: string;
+  pay_id: number;
   contact_id: string;
   amount: number;
   is_request: 'request' | 'payment';

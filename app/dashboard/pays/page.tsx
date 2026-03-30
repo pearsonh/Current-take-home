@@ -1,5 +1,5 @@
 import Pagination from '@/app/ui/pays/pagination';
-import { fetchPaysPages } from "@/app/lib/data";
+import { fetchPaysPages, fetchSignedInUser } from "@/app/lib/data";
 import Search from '@/app/ui/search';
 import Table from '@/app/ui/pays/table';
 import { CreatePay } from '@/app/ui/pays/buttons';
@@ -18,8 +18,9 @@ export default async function Page({
     searchParams = await searchParams;
     const query = searchParams?.query || '';
     const currentPage = Number(searchParams?.page) || 1;
+    const user = await fetchSignedInUser();
 
-    const totalPages = await fetchPaysPages(query);
+    const totalPages = await fetchPaysPages(user, query);
 
     return (
         <div className="w-full">
@@ -31,7 +32,7 @@ export default async function Page({
                 <CreatePay />
             </div>
             <Suspense key={query + currentPage} fallback={<PaysTableSkeleton />}>
-                <Table query={query} currentPage={currentPage} />
+                <Table user={user} query={query} currentPage={currentPage} />
             </Suspense>
             <div className="mt-5 flex w-full justify-center">
                 <Pagination totalPages={totalPages} />
