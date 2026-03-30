@@ -123,3 +123,4 @@ On Contacts - I added a user_id and a fake, non-user contact to demonstrate scal
 - Pagination: Pagination is set up, but I never got around to fully implementing it. It would be good, especially for a user with hundreds of transactions (and interacting with and actual backend) to be able to load transactions page at a time.
 
 - More Filter Options: expanding filters for Pays in particular to date, or Pending or Paid would also be a good, simple addition
+- Group Pay: The stretch goal I didn't quite make - it would require some reworking of how contacts and pays relate to one another (contact_id could also pertain to a new Group object), but it would be a good function for users.
