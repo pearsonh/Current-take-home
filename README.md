@@ -61,12 +61,48 @@ There are `TODO`s. Try to get to them all.
 
 # Candidate README
 ## Bootstrap instructions
-*Replace this: To run this locally, do the following (if anything)*
+To run this locally - navigate to the root directory /Current-take-home and run `pnpm dev`. It will be hosted on [localhost:3000](http://localhost:3000/) on your browser. 
 
 ## Design considerations
-*Replace this: I decided to build X for Y reasons...*
+First on comments - I have placed comments where I felt it was necessary to elaborate on how or why something was happening - specifically on the Pay definition, and a few other helper functions. I generally believe that good code is self-commenting, so I do not tend to write broad function-level comments. That being said that is due to the work environments I have worked in, and I am not opposed to function-level comments. 
 
-- Wallets
-- Amount
-- Potential enhancements
-- Miscellaneous
+On Pays - the process of how this evolved is shown in the git comments, but I want to summarize the final version here:
+
+-id: I settled on a UUID because it was strictly unique, and matched other data structures in the app
+-pay_id: For how updates were eventually handled, I needed an id that would tie different pay entries for the same transaction - when a transaction was updated, a new entry with the new data was created, this one was deleted, but a new . While there is no frontend implementation, the idea is that a. developers can track the history of edits on a single transaction and b. later a rollback or undo function could be done for payments.
+-amount: Two major design decision were made here - that negative values would represent a payment (and positive a request), and the number would represent dollars and not cents. The first decision I made for scalability in the future - large scale reporting and eventual wallet implementation are important to banking. Therefore it was easier to represent this value as how it was subtracted from the users wallet as opposed to a blank sum per record for thousands of records, where recalculation gets expensive. The second was simplicity - most representations don't require a strict tally of cents, so I felt like a two decimal was perfectly fine, and meant less math for the frontend. 
+-contact_id: the id of a contact to who the money is being sent/requested from. I did change this to snake case, as I prefer snake case variables/camel case functions. Again, not a hard rule, but one that has to be consistent. 
+-user_id: the user this pay "belongs" to. Allows editing of the pay, and permits scalability by creating room for multiple users. 
+-create_date: UNIX timestamp for when the transaction was created (an activity date) - distinct from when the pay item itself is created. UNIX is used for all dates because it is accurate wherever you are, and simple to store - two things that seemed important for a banking app. 
+-finalize_date: the UNIX timestamp for when a pay moves from pending to complete. Can be null, indicating a pending transaction. I chose this approach as opposed to having an enum or boolen for pending as this allows greater data density at a quick glance - we know not if a transaction is complete, but when. 
+-update_date: The UNIX timestamp for when a pay is updated. Important for record keeping - not used in the UI, but you can see it if you debug the app through the console while it is running. 
+-delete_date: The UNIX timestamp for when a pay item is deleted, or null if not deleted. Per pay item, not per transaction - if a transaction is deleted, there are simply no entries for that pay_id with a null delete date. I chose this approach to avoid actually deleting entries using deletePay or for updatePay - users should be able to create new version of pays/remove unwanted pays from their ui, but not use the application to annihilate data that the company can use (or that the user may want back someday). 
+
+The idea behind the pays structure is that by having an insert-only design, we maintain maximum data integrity while also having the utility and scalability outlined in the initial app. This structure would make it very easy to implement pay version histories, wallets, and deliver on data reporting, internal or otherwise. 
+
+On Card Data - I made note of this in my comments on Github, but in a real app and with more time I would have wanted pays/contacts per user to be properly cached values, and these values to be derived from such - as it stands now, each card makes its own "call" to pays/contacts to generate this data, so if I had more NextJS experience I would have done so. 
+
+On Latest Pays - I figured this was supposed to have a limit, so I set it to six to make it line up with the activity chart, and I added the finalize date (or pending, if null) to each line so the user can also see when the latest transaction happened (or if it was still waiting to be finalized). Otherwise it is a sorted copy of pays (per above, I woudl like this to have been a memory-cached value on the clients machine, pulled once upon loading the page).
+
+On Pays - Filtering was pretty easy, I chose to do so by matching both email and name. I expanded the data shown to the create date and finalize date (Date Paid) to provide some better identifying information that just amount and contact.
+
+On Create/Edit/Delete Pay - I lost a lot of time to the `use client` line, but I still got a lot of what I wanted done. Ultimately there were only a few fields I felt like should be modified - no editing create_date or the id, for instance, but I did slip all the relevant id's into formData using hidden input. I recognize this is insecure in its current state, and I would have preferred to manage these in a different way if I had more time. 
+
+  The major change here was Edit being insert only. Instead of 
+    -a pay is loaded to be edited
+    -the user selects their changes
+    -the values are changed in place on the pay array
+  We engage this process instead
+    -a pay is loaded to be edited, with its pay_id and uuid passed into the function
+    -the user selects their changes
+    -the old version is 'deleted' i.e. its delete date is updated. 
+    -a new version with the same pay_id, create_date, and user_id is created, with any changed values represented there
+    -a new uuid (id) is generated for the new version, and its update_date is set to the current timestamp (we can use this to see when changes are made without updating create_date).
+    -the new version is pushed onto the stack as the sole, non-deleted version of the update. 
+
+Now we have a full record of all changes made to payments, while still allowing users to delete and change the active version of a transaction.
+One thing I wish I could have done here was handle the end state better - right now it just reload the page with the old data, and that isn't user friendly. I would have liked to implement a confirmation of a successful operation, and move them back to the main page. 
+
+On Activity - I chose to show this by finalize_date as opposed to create_date, so that pending transactions that might fail aren't being represented in the activity tracker. 
+
+-Potential Enhancements
