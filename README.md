@@ -86,7 +86,7 @@ On Latest Pays - I figured this was supposed to have a limit, so I set it to six
 
 On Pays - Filtering was pretty easy, I chose to do so by matching both email and name. I expanded the data shown to the create date and finalize date (Date Paid) to provide some better identifying information that just amount and contact.
 
-On Create/Edit/Delete Pay - I lost a lot of time to the `use client` line, but I still got a lot of what I wanted done. Ultimately there were only a few fields I felt like should be modified - no editing create_date or the id, for instance, but I did slip all the relevant id's into formData using hidden input. I recognize this is insecure in its current state, and I would have preferred to manage these in a different way if I had more time. 
+On Create/Edit Pay - I lost a lot of time to the `use client` line, but I still got a lot of what I wanted done. Ultimately there were only a few fields I felt like should be modified - no editing create_date or the id, for instance, but I did slip all the relevant id's into formData using hidden input. I recognize this is insecure in its current state, and I would have preferred to manage these in a different way if I had more time. 
 
   The major change here was Edit being insert only. Instead of 
     -a pay is loaded to be edited
@@ -101,8 +101,23 @@ On Create/Edit/Delete Pay - I lost a lot of time to the `use client` line, but I
     -the new version is pushed onto the stack as the sole, non-deleted version of the update. 
 
 Now we have a full record of all changes made to payments, while still allowing users to delete and change the active version of a transaction.
-One thing I wish I could have done here was handle the end state better - right now it just reload the page with the old data, and that isn't user friendly. I would have liked to implement a confirmation of a successful operation, and move them back to the main page. 
+One thing I wish I could have done here was handle the end state better - right now it just reloads the page with the old data, and that isn't user friendly. I would have liked to implement a confirmation of a successful operation, and move them back to the main page. 
+
+On Delete Pay - The only major decision I made here besides what I had already decided on in my data structure for Pays was to have an "Are you sure?" page with some data on the transaction before deleting it, as well as a hotlink to the Edit Page - in addition to not letting users delete actual data, it would be good to keep them from destroying their payments with an accidental misclick. 
 
 On Activity - I chose to show this by finalize_date as opposed to create_date, so that pending transactions that might fail aren't being represented in the activity tracker. 
 
+On Contacts - I added a user_id and a fake, non-user contact to demonstrate scalability for users/contacts, that these fields can be expanded to encompass multiple users and their contacts. 
+
 -Potential Enhancements
+
+-Multiple Users
+  -As Contacts/Pays are already set up to be per-user, implementing multiple users/login would be the next step. 
+
+-Wallets: Amounts are already set up in a way that makes representing a wallet ideal and easy. 
+
+-Statements: We already have logic for generating a long record of pays, and allowing a PDF import of a months transactions could be done with the data we have, and could be requested from the app itself for maximum ease. 
+
+-Pagination: Pagination is set up, but I never got around to fully implementing it. It would be good, especially for a user with hundreds of transactions (and interacting with and actual backend) to be able to load transactions page at a time.
+
+-More Filter Options: expanding filters for Pays in particular to date, or Pending or Paid would also be a good, simple addition
