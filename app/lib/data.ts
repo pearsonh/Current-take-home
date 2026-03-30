@@ -26,17 +26,20 @@ export async function fetchActivity(user: string): Promise<Activity[]> {
         let new_activity: Activity[] = [];
         let sorted_pays = getDateSortedPaysAsc(active_pays);
         sorted_pays.forEach((pay) => {
-          let create_date: Date = getDateFromUnix(pay.create_date);
-          let create_date_key: string = create_date.toLocaleString('default', {month: 'short'}) + ', ' + create_date.getFullYear();
-          let existing_key = new_activity.findIndex((entry) => entry.month === create_date_key);
-          if (existing_key > 0) {
-            new_activity[existing_key].activity += pay.amount;
-          } else {
-            new_activity.push({
-              month: create_date_key,
-              activity: pay.amount
-            })
+          if (pay.finalize_date) {
+            let finalize_date: Date = getDateFromUnix(pay.finalize_date);
+            let finalize_date_key: string = finalize_date.toLocaleString('default', {month: 'short'}) + ', ' + finalize_date.getFullYear();
+            let existing_key = new_activity.findIndex((entry) => entry.month === finalize_date_key);
+            if (existing_key > 0) {
+              new_activity[existing_key].activity += Math.abs(pay.amount);
+            } else {
+              new_activity.push({
+                month: finalize_date_key,
+                activity: Math.abs(pay.amount)
+              })
+            }
           }
+          
         })
         resolve(new_activity.slice(MAX_ACTIVITY * -1));
       } catch (error) {
