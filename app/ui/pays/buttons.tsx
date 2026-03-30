@@ -26,15 +26,12 @@ export function UpdatePay({ id }: { id: string }) {
 }
 
 export function DeletePay({ id }: { id: string }) {
-  function handleDelete () {
-    deletePay(id);
-  }
   return (
-    <>
-      <button onClick={handleDelete} className="rounded-md border p-2 hover:bg-gray-100" >
-        <span className="sr-only">Delete</span>
+        <Link
+          href={`/dashboard/pays/delete?id=${id}`}
+          className="rounded-md border p-2 hover:bg-gray-100"
+        >
         <TrashIcon className="w-5" />
-      </button>
-    </>
+      </Link>
   );
 }

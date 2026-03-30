@@ -54,7 +54,7 @@ export async function updatePay(formData: FormData) {
         throw new Error ('You are not permitted to edit this pay');
     }
     const current_date = new Date();
-    const finalize_date:number | null = status === 'pending' ? null : current_date.getTime()
+    const finalize_date: number | null = status === 'pending' ? null : current_date.getTime()
     let index = pays.findIndex(e => e.id === id);
     if (pays[index]) {
         let new_element: Pay = {
@@ -72,8 +72,19 @@ export async function updatePay(formData: FormData) {
 
 }
 
-export async function deletePay(pay_uuid: string) {
-    let pay_index = pays.findIndex(pay => pay.id === pay_uuid);
+const DeletePay = FormSchema.omit({ 
+    pay_id: true,
+    user: true,
+    contactId: true,
+    amount: true,
+    is_request: true,
+    status: true,
+    date: true});
+export async function deletePay(formData: FormData) {
+    const {id} = DeletePay.parse({
+        id: formData.get('id')?.toString()
+    });
+    let pay_index = pays.findIndex(pay => pay.id === id);
     if (pay_index) {
         pays[pay_index].delete_date = new Date().getTime();
     }

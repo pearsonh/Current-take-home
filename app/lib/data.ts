@@ -56,7 +56,7 @@ export async function fetchLatestPays(user:string ): Promise<LatestPay[]> {
   return await new Promise((resolve, reject) => {
     try {
       let latest_pays: LatestPay[] = [];
-      let sorted_pays = getDateSortedPaysDesc(pays).splice(0,  MAX_LATEST_PAYS);
+      let sorted_pays = getDateSortedPaysDesc(active_pays).splice(0,  MAX_LATEST_PAYS);
       sorted_pays.forEach((payment) => {
         let contact = contacts[contacts.findIndex((e) => e['id'] == payment.contact_id)];
         let latest_pay: LatestPay = {
