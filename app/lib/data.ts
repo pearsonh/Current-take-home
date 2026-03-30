@@ -247,6 +247,7 @@ function getDateSortedPaysAsc(pays: Pay[]): Pay[] {
 
 function getActiveUserPays(user_id: string): Pay[] {
   return pays.filter((pay: Pay) => {
-    return pay.delete_date == null && pay.user_id === user_id;
+    return pay.user_id === user_id
+      && pay.delete_date == null;
   })
 }
