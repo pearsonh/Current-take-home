@@ -67,8 +67,7 @@ To run this locally - navigate to the root directory /Current-take-home and run 
 First on comments:
 - I have placed comments where I felt it was necessary to elaborate on how or why something was happening - specifically on the Pay definition, and a few other helper functions. I generally believe that good code is self-commenting, so I do not tend to write broad function-level comments. That being said that is due to the work environments I have worked in, and I am not opposed to function-level comments. 
 
-- On Pays:
-- the process of how this evolved is shown in the git comments, but I want to summarize the final version here:
+- On Pays: the process of how this evolved is shown in the git comments, but I want to summarize the final version here:
 
 - id: I settled on a UUID because it was strictly unique, and matched other data structures in the app
 - pay_id: For how updates were eventually handled, I needed an id that would tie different pay entries for the same transaction - when a transaction was updated, a new entry with the new data was created, this one was deleted, but a new . While there is no frontend implementation, the idea is that a. developers can track the history of edits on a single transaction and b. later a rollback or undo function could be done for payments.
@@ -94,6 +93,8 @@ The major change here was Edit being insert only. Instead of
 1. a pay is loaded to be edited
 2. the user selects their changes
 3. the values are changed in place on the pay array
+
+
 We engage this process instead
 1. a pay is loaded to be edited, with its pay_id and uuid passed into the function
 2. the user selects their changes
