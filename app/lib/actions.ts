@@ -17,7 +17,7 @@ const FormSchema = z.object({
     date: z.string(),
 });
 
-const CreatePay = FormSchema.omit({ id: true, date: true, is_request: true });
+const CreatePay = FormSchema.omit({ id: true, pay_id: true, date: true, is_request: true });
 export async function createPay(formData: FormData) {
     const {user, contactId, amount, status } = CreatePay.parse({
         user: formData.get('user'),
